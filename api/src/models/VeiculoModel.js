@@ -64,7 +64,74 @@ export const consultarTodos = async (search) => {
         throw error; 
     } finally {
         if (cx) {
-            cx.release(); // Liberar a conexão de volta ao pool
+            cx.release(); 
         }
     }
 } 
+export const consultarPorId = async (id) => {
+    const cx = await pool.getConnection(); 
+    try {
+        let query = `SELECT * FROM veiculo WHERE id = ?`;
+        const [rows] = await cx.query(query, [id]); 
+
+        return rows; 
+    } catch (error) {
+        throw error; 
+    } finally {
+        if (cx) cx.release();
+    }
+};
+
+export const alterar = async (veiculo) => {
+    let cx;
+    try {
+        let valores = [];
+        let cmdSql = "UPDATE veiculo SET ";
+
+ 
+        for (const key in veiculo) {
+            if (key !== "id") {
+                valores.push(veiculo[key]);
+                cmdSql += `${key} = ?, `;
+            }
+        }
+
+     
+        cmdSql = cmdSql.slice(0, -2);
+        cmdSql += " WHERE id = ?;";
+
+        valores.push(veiculo.id); 
+
+        cx = await pool.getConnection();
+        const [execucao] = await cx.query(cmdSql, valores);
+
+        if (execucao.affectedRows > 0) {
+        
+            const [dados] = await cx.query("SELECT * FROM veiculo WHERE id = ?;", [veiculo.id]);
+            return dados;
+        }
+
+        return [];
+    } catch (error) {
+        throw error;
+    } finally {
+        if (cx) cx.release();
+    }
+};
+export const deletar = async (id) => {
+    let cx;
+    try {
+        cx = await pool.getConnection();
+        const cmdSql = 'DELETE FROM veiculo WHERE id = ?;';
+        const [dados] = await cx.query(cmdSql, [id]);
+        return dados; 
+    } 
+    catch (error) {
+        throw error;
+    } 
+    finally {
+        if (cx) cx.release();
+    }
+};
+
+
