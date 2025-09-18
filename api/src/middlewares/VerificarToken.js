@@ -1,8 +1,9 @@
 import jwt from "jsonwebtoken";
+import { consultarPorId } from "../models/UsuarioModel.js";
 
 const SECRET = "sua_chave_secreta";
 
-export const verificarToken = (req, res, next) => {
+export const verificarToken = async (req, res, next) => {
   const authHeader = req.headers["authorization"];
   if (!authHeader) {
     return res.status(401).json({ erro: "Token não fornecido" });
@@ -15,13 +16,24 @@ export const verificarToken = (req, res, next) => {
 
   const token = partes[1];
 
-  jwt.verify(token, SECRET, (err, decoded) => {
+  jwt.verify(token, SECRET, async (err, decoded) => {
     if (err) {
       return res.status(403).json({ erro: "Token inválido" });
     }
 
-    // CORREÇÃO: usar "id" do token
-    req.userId = decoded.id;
-    next();
+    try {
+      const usuario = await consultarPorId(decoded.id);
+      if (!usuario) {
+        return res.status(404).json({ erro: "Usuário não encontrado" });
+      }
+
+      // Salva o nome e id do usuário na requisição
+      req.userId = usuario.id;
+      req.userName = usuario.nome;
+
+      next();
+    } catch (error) {
+      return res.status(500).json({ erro: error.message });
+    }
   });
 };

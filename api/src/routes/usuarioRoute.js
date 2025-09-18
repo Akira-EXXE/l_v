@@ -19,17 +19,8 @@ router.post('/usuario', async (req, res) => {
 router.post('/login', login);
 
 // Rota protegida
-router.get('/me', verificarToken, async (req, res) => {
-  try {
-    const usuario = await consultarPorId(req.userId);
-    if (!usuario) {
-      return res.status(404).json({ erro: "Usuário não encontrado" });
-    }
-
-    res.json({ mensagem: `Bem-vindo, ${usuario.nome}` });
-  } catch (error) {
-    res.status(500).json({ erro: error.message });
-  }
+router.get("/me", verificarToken, (req, res) => {
+  res.json({ mensagem: `Bem-vindo, ${req.userName}` });
 });
 
 
